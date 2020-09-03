@@ -1,11 +1,13 @@
-FROM devgeniem/base:ubuntu
-MAINTAINER Ville Pietarinen - Geniem Oy <ville.pietarinen-nospam@geniem.com>
+FROM vsalomaki/docker-base:latest
+MAINTAINER Ville Salomäki - Vistek <vsalomaki@gmail.com>
+#Forked from files by Ville Pietarinen / Geniem Oy
 
 # Build Arguments for openresty/nginx
-ARG RESTY_VERSION="1.11.2.1"
+ARG RESTY_VERSION="1.15.8.3"
 ARG RESTY_OPENSSL_VERSION="1.0.2j"
 
-ARG PAGESPEED_VERSION="1.11.33.4"
+#ARG PAGESPEED_VERSION="1.11.33.4"
+ARG PAGESPEED_VERSION="1.13.35.2"
 
 # Fix apt-get and show colors
 ARG DEBIAN_FRONTEND=noninteractive
@@ -34,7 +36,8 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream \
     --with-stream_ssl_module \
     --with-threads \
-
+    #--without-debug \
+    
     --without-http_autoindex_module \
     --without-http_browser_module \
     --without-http_userid_module \
@@ -46,7 +49,7 @@ ARG RESTY_CONFIG_OPTIONS="\
     --without-http_scgi_module \
     --without-http_referer_module \
 
-    --without-http_redis_module \
+    #--without-http_redis_module \
 
      --user=nginx \
      --group=nginx \
@@ -65,15 +68,16 @@ ARG RESTY_CONFIG_OPTIONS="\
     --http-proxy-temp-path=/tmp/nginx/proxy \
     --http-client-body-temp-path=/tmp/nginx/client_body \
 
-    --add-module=/tmp/ngx_http_redis-0.3.7-master \
-    --add-module=/tmp/incubator-pagespeed-ngx-${PAGESPEED_VERSION}-beta \
     --add-module=/tmp/ngx_cache_purge-2.3 \
     --with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
+    --add-module=/tmp/incubator-pagespeed-ngx-${PAGESPEED_VERSION}-stable \
     "
 
+#--add-module=/tmp/ngx_http_redis-0.3.7-master \
 
 # These are only needed during the installation
-ARG BUILD_DEPS='build-essential curl libreadline-dev libncurses5-dev libpcre3-dev libgeoip-dev zlib1g-dev ca-certificates'
+ARG BUILD_DEPS='build-essential curl libreadline-dev libncurses5-dev libpcre3 libpcre3-dev libgeoip-dev \
+                  zlib1g-dev ca-certificates perl make libssl-dev unzip uuid-dev'
 
 # Install base utils
 RUN \
@@ -85,16 +89,15 @@ RUN \
     ### Download Tarballs ###
     # Download PageSpeed
     echo "Downloading PageSpeed..." && \
-    curl -L https://github.com/pagespeed/ngx_pagespeed/archive/v${PAGESPEED_VERSION}-beta.tar.gz | tar -zx && \
+    curl -L https://github.com/pagespeed/ngx_pagespeed/archive/v${PAGESPEED_VERSION}-stable.tar.gz | tar -zx && \
 
-    ls -lah && \
+    #ls -lah && \
 
     # psol needs to be inside ngx_pagespeed module
     # Download PageSpeed Optimization Library and extract it to nginx source dir
-    #cd /tmp/ngx_pagespeed-${PAGESPEED_VERSION}-beta/ && \
-    cd /tmp/incubator-pagespeed-ngx-${PAGESPEED_VERSION}-beta/ && \
+    cd /tmp/incubator-pagespeed-ngx-${PAGESPEED_VERSION}-stable/ && \
     echo "Downloading PSOL..." && \
-    curl -L https://dl.google.com/dl/page-speed/psol/${PAGESPEED_VERSION}.tar.gz | tar -zx && \
+    curl -L https://dl.google.com/dl/page-speed/psol/${PAGESPEED_VERSION}-x64.tar.gz | tar -zx && \
 
     cd /tmp/ && \
     # Download Nginx cache purge module
@@ -110,8 +113,8 @@ RUN \
     curl -L https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz | tar -zx && \
 
     # Download custom redis module with AUTH support
-    echo "Downloading ngx_http_redis..." && \
-    curl -L https://github.com/onnimonni/ngx_http_redis-0.3.7/archive/master.tar.gz | tar -zx && \
+    #echo "Downloading ngx_http_redis..." && \
+    #curl -L https://github.com/onnimonni/ngx_http_redis-0.3.7/archive/master.tar.gz | tar -zx && \
 
     # Use all cores available in the builds with -j${NPROC} flag
     readonly NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)  && \
@@ -129,7 +132,7 @@ RUN \
 
     ## Cleanup
     rm -rf /var/lib/apt/lists/* && \
-    apt-get remove --purge -y $BUILD_DEPS $(apt-mark showauto) && \
+    #apt-get remove --purge -y $BUILD_DEPS $(apt-mark showauto) && \
     rm -rf /tmp/* /var/log/apt/*
 
 RUN \
