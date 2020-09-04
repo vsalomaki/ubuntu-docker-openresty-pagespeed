@@ -91,8 +91,6 @@ RUN \
     echo "Downloading PageSpeed..." && \
     curl -L https://github.com/pagespeed/ngx_pagespeed/archive/v${PAGESPEED_VERSION}-stable.tar.gz | tar -zx && \
 
-    #ls -lah && \
-
     # psol needs to be inside ngx_pagespeed module
     # Download PageSpeed Optimization Library and extract it to nginx source dir
     cd /tmp/incubator-pagespeed-ngx-${PAGESPEED_VERSION}-stable/ && \
@@ -111,10 +109,6 @@ RUN \
     # Download Openresty bundle
     echo "Downloading openresty..." && \
     curl -L https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz | tar -zx && \
-
-    # Download custom redis module with AUTH support
-    #echo "Downloading ngx_http_redis..." && \
-    #curl -L https://github.com/onnimonni/ngx_http_redis-0.3.7/archive/master.tar.gz | tar -zx && \
 
     # Use all cores available in the builds with -j${NPROC} flag
     readonly NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)  && \
