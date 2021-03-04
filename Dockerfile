@@ -72,8 +72,9 @@ ARG BUILD_DEPS='build-essential curl libreadline-dev libncurses5-dev libpcre3 li
 
 # Install base utils
 RUN \
-    apt-get update && \
-    apt-get -y install $BUILD_DEPS --no-install-recommends && \
+    apt update && \
+    apt -y upgrade && \
+    apt -y install $BUILD_DEPS --no-install-recommends && \
     cd /tmp/ && \
     ### Download Tarballs ###
     # Download PageSpeed
