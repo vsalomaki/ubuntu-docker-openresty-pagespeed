@@ -1,4 +1,6 @@
-FROM vsalomaki/docker-base:latest
+ARG SOURCEIMAGE="vsalomaki/docker-base:18.04.01" 
+
+FROM $SOURCEIMAGE as nginxbuilder
 LABEL maintainer="vsalomaki@gmail.com"
 #Forked from files by Ville Pietarinen / Geniem Oy
 
@@ -104,16 +106,21 @@ RUN \
     # Build Nginx
     make -j${NPROC} && \
     make -j${NPROC} install && \
-    mkdir -p /var/lib/nginx /var/log/nginx && \
     ## Cleanup
     rm -rf /var/lib/apt/lists/* && \
     #apt-get remove --purge -y $BUILD_DEPS $(apt-mark showauto) && \
     rm -rf /tmp/* /var/log/apt/*
 
+FROM $SOURCEIMAGE 
+COPY --from=nginxbuilder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=nginxbuilder /usr/lib/nginx /usr/lib/nginx
+COPY --from=nginxbuilder /etc/nginx /etc/nginx
+
 RUN \
     # Temp directory
     mkdir /tmp/nginx/ \
-    mkdir -p /tmp/nginx/pagespeed/images/ \
+    && mkdir -p /tmp/nginx/pagespeed/images/ \
+    && mkdir -p /var/lib/nginx /var/log/nginx  \
     # Symlink modules path to config path for easier usage
     && ln -sf /usr/lib/nginx /etc/nginx/modules \
     # Create nginx group
